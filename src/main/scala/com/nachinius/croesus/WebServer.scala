@@ -14,6 +14,7 @@ import scala.io.StdIn
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.server.Directives._
+import com.nachinius.croesus.WordCounter.FileRoute
 import scala.collection.concurrent.TrieMap
 import scala.collection.immutable.HashMap
 

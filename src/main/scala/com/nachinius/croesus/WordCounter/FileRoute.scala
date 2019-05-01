@@ -1,6 +1,6 @@
-package com.nachinius.croesus
+package com.nachinius.croesus.WordCounter
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Directives.{complete, extractRequestContext, fileUpload, onSuccess}
 import akka.stream.scaladsl.Framing
 import akka.util.ByteString
 

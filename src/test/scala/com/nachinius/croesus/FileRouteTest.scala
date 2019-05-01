@@ -1,16 +1,12 @@
 package com.nachinius.croesus
 
 import org.scalatest.{Matchers, WordSpec}
-import akka.http.scaladsl.model.{
-  ContentTypes,
-  HttpEntity,
-  Multipart,
-  StatusCodes
-}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart, StatusCodes}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.http.scaladsl.server._
 import Directives._
-import com.nachinius.croesus.FileRoute.Solution
+import com.nachinius.croesus.WordCounter.FileRoute
+import com.nachinius.croesus.WordCounter.FileRoute.Solution
 
 class FileRouteTest extends WordSpec with Matchers with ScalatestRouteTest {
 
@@ -70,15 +66,18 @@ class FileRouteTest extends WordSpec with Matchers with ScalatestRouteTest {
       }
     }
     "disregard new lines" in {
-      Post("/", buildMultipartForm("lorem \n  ipsum  \n  lorem   \n\n\n ipsum ipsum")) ~> route ~>
-          check {
-        status shouldEqual StatusCodes.OK
-        val sol = responseAs[Solution]
-        sol.countOf("lorem") shouldBe 2
-        sol.countOf("ipsum") shouldBe 3
-      }
+      Post(
+        "/",
+        buildMultipartForm("lorem \n  ipsum  \n  lorem   \n\n\n ipsum ipsum")
+      ) ~> route ~>
+        check {
+          status shouldEqual StatusCodes.OK
+          val sol = responseAs[Solution]
+          sol.countOf("lorem") shouldBe 2
+          sol.countOf("ipsum") shouldBe 3
+        }
     }
-    
+
   }
 
 }
