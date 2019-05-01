@@ -30,7 +30,7 @@ object WordCounterRoute {
             // accept any size of file
             byteSource
               .via(Framing.delimiter(ByteString(mainSeparator), maxWordSize, true))
-              .mapConcat(_.utf8String.split(extraSeparatorRegex).toVector)
+              .mapConcat(_.utf8String.split(extraSeparatorRegex).toVector).map(_.toLowerCase)
               .runFold(emptyMap)(Solution.accumulator)
               
 
