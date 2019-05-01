@@ -5,53 +5,7 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart, StatusCode
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.http.scaladsl.server._
 import Directives._
-
-class FullTestKitExampleSpec extends WordSpec with Matchers with ScalatestRouteTest {
-    
-    val smallRoute =
-        get {
-            pathSingleSlash {
-                complete {
-                    "Captain on the bridge!"
-                }
-            } ~
-                path("ping") {
-                    complete("PONG!")
-                }
-        }
-    
-    "The service" should {
-        
-        "return a greeting for GET requests to the root path" in {
-            // tests:
-            Get() ~> smallRoute ~> check {
-                responseAs[String] shouldEqual "Captain on the bridge!"
-            }
-        }
-        
-        "return a 'PONG!' response for GET requests to /ping" in {
-            // tests:
-            Get("/ping") ~> smallRoute ~> check {
-                responseAs[String] shouldEqual "PONG!"
-            }
-        }
-        
-        "leave GET requests to other paths unhandled" in {
-            // tests:
-            Get("/kermit") ~> smallRoute ~> check {
-                handled shouldBe false
-            }
-        }
-        
-        "return a MethodNotAllowed error for PUT requests to the root path" in {
-            // tests:
-            Put() ~> Route.seal(smallRoute) ~> check {
-                status shouldEqual StatusCodes.MethodNotAllowed
-                responseAs[String] shouldEqual "HTTP method not allowed, supported methods: GET"
-            }
-        }
-    }
-}
+import com.nachinius.croesus.FileRoute.Solution
 
 class FileRouteTest extends WordSpec with Matchers with ScalatestRouteTest {
 
@@ -63,11 +17,15 @@ class FileRouteTest extends WordSpec with Matchers with ScalatestRouteTest {
               HttpEntity(ContentTypes.`text/plain(UTF-8)`, content),
               Map("filename" -> filename)))
   }
+    import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+    import spray.json._
+  import FileRoute.JsonSupport._
   
   "The route must " in {
     Post("/", buildMultipartForm("a")) ~> route ~> check {
       status shouldEqual StatusCodes.OK
-      responseAs[String] shouldEqual "Solution(1,Map(a -> 2))"
+//        responseAs[String] shouldEqual "Solution(1,Map(a -> 3))"
+        responseAs[Solution] shouldEqual Solution(1, Map("a" -> 4))
     }
   }
 }
