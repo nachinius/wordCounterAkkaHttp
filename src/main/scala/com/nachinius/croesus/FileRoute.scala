@@ -1,6 +1,5 @@
 package com.nachinius.croesus
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
-import akka.http.scaladsl.model.headers.{RawHeader, `Content-Type`}
 import akka.http.scaladsl.server.Directives._
 import akka.stream.scaladsl.Framing
 import akka.util.ByteString
@@ -31,7 +30,9 @@ object FileRoute {
           onSuccess(acc) { dict =>
             val sol = Solution(sumUp(dict), dict)
             val jsValue = JsonSupport.SolutionJsonFormat.write(sol)
-            complete(HttpEntity(ContentTypes.`application/json`, jsValue.prettyPrint))
+            complete(
+              HttpEntity(ContentTypes.`application/json`, jsValue.prettyPrint)
+            )
           }
       }
     }
@@ -41,17 +42,17 @@ object FileRoute {
   }
 
   final case class Solution(totalWordCount: Int,
-                            dictionaryCount: Map[String, Int])
+                            dictionaryCount: Map[String, Int]) {
+    def countOf(word: String) = dictionaryCount.getOrElse(word, 0)
+  }
 
-  import akka.http.scaladsl.server.Directives
-  import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
   import spray.json._
 
   // collect your json format instances into a support trait:
   object JsonSupport extends DefaultJsonProtocol {
     val wordCountFieldName = "wordCount"
     val totalFieldName = "total"
-    
+
     implicit object MapJsonFormat extends RootJsonFormat[Map[String, Int]] {
       override def write(obj: Map[String, Int]): JsValue =
         JsObject(obj.mapValues(JsNumber(_)))
@@ -59,8 +60,7 @@ object FileRoute {
         json.asJsObject.fields.mapValues(_.convertTo[Int])
       }
     }
-    
-    
+
     implicit object SolutionJsonFormat extends RootJsonFormat[Solution] {
       override def write(obj: Solution): JsValue = JsObject(
         totalFieldName -> JsNumber(obj.totalWordCount),
@@ -69,7 +69,7 @@ object FileRoute {
       override def read(json: JsValue): Solution = {
         json.asJsObject.getFields(totalFieldName, wordCountFieldName) match {
           case Seq(JsNumber(total), wordCount) =>
-            Solution(total.toInt, wordCount.convertTo[Map[String,Int]])
+            Solution(total.toInt, wordCount.convertTo[Map[String, Int]])
         }
       }
     }
