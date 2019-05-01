@@ -10,8 +10,12 @@ import akka.stream.scaladsl.Framing
 import akka.util.ByteString
 
 object WordCounterRoute {
+  
+  val mainSeparator = " "
+  val extraSeparatorRegex= "[,\t\n.]"
+  val maxWordSize = 1024
+  val fieldName = "txt"
 
-  type Dict = Map[String, Int]
   val splitWords = Framing.delimiter(ByteString(" "), 256)
   val emptyMap: Map[String, Int] = Map.empty
   // adding integers as a service
@@ -19,21 +23,19 @@ object WordCounterRoute {
     extractRequestContext { ctx =>
       implicit val materializer = ctx.materializer
 
-      fileUpload("csv") {
+      fileUpload(fieldName) {
         case (metadata, byteSource) =>
           val acc =
             // sum the numbers as they arrive so that we can
             // accept any size of file
             byteSource
-              .via(Framing.delimiter(ByteString(" "), 1024, true))
-              .mapConcat(_.utf8String.split("[,\t\n.]").toVector)
-              .runFold(emptyMap) {
-                case (dictCounter: Map[String, Int], str: String) =>
-                  dictCounter.updated(str, 1 + dictCounter.getOrElse(str, 0))
-              }
+              .via(Framing.delimiter(ByteString(mainSeparator), maxWordSize, true))
+              .mapConcat(_.utf8String.split(extraSeparatorRegex).toVector)
+              .runFold(emptyMap)(Solution.accumulator)
+              
 
           onSuccess(acc) { dict =>
-            val sol = Solution(Solution.sumUp(dict), dict)
+            val sol = Solution(dict)
             val jsValue = JsonSupport.SolutionJsonFormat.write(sol)
             complete(
               HttpEntity(ContentTypes.`application/json`, jsValue.prettyPrint)
@@ -42,34 +44,4 @@ object WordCounterRoute {
       }
     }
 
-  
-
-  import spray.json._
-
-  // collect your json format instances into a support trait:
-  object JsonSupport extends DefaultJsonProtocol {
-    val wordCountFieldName = "wordCount"
-    val totalFieldName = "total"
-
-    implicit object MapJsonFormat extends RootJsonFormat[Map[String, Int]] {
-      override def write(obj: Map[String, Int]): JsValue =
-        JsObject(obj.mapValues(JsNumber(_)))
-      override def read(json: JsValue): Map[String, Int] = {
-        json.asJsObject.fields.mapValues(_.convertTo[Int])
-      }
-    }
-
-    implicit object SolutionJsonFormat extends RootJsonFormat[Solution] {
-      override def write(obj: Solution): JsValue = JsObject(
-        totalFieldName -> JsNumber(obj.totalWordCount),
-        wordCountFieldName -> obj.dictionaryCount.toJson
-      )
-      override def read(json: JsValue): Solution = {
-        json.asJsObject.getFields(totalFieldName, wordCountFieldName) match {
-          case Seq(JsNumber(total), wordCount) =>
-            Solution(total.toInt, wordCount.convertTo[Map[String, Int]])
-        }
-      }
-    }
-  }
 }
