@@ -1,16 +1,12 @@
-package com.nachinius.croesus
+package com.nachinius.croesus.WordCounter
 
-import org.scalatest.{Matchers, WordSpec}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart, StatusCodes}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import akka.http.scaladsl.server._
-import Directives._
-import com.nachinius.croesus.WordCounter.FileRoute
-import com.nachinius.croesus.WordCounter.FileRoute.Solution
+import org.scalatest.{Matchers, WordSpec}
 
-class FileRouteTest extends WordSpec with Matchers with ScalatestRouteTest {
+class WordCounterRouteTest extends WordSpec with Matchers with ScalatestRouteTest {
 
-  val route = FileRoute.route
+  val route = WordCounterRoute.route
 
   def buildMultipartForm(content: String, filename: String = "primes.csv") = {
     Multipart.FormData(
@@ -21,9 +17,8 @@ class FileRouteTest extends WordSpec with Matchers with ScalatestRouteTest {
       )
     )
   }
+  import WordCounterRoute.JsonSupport._
   import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
-  import spray.json._
-  import FileRoute.JsonSupport._
 
   "The endpoint " must {
     "handle a single word" in {

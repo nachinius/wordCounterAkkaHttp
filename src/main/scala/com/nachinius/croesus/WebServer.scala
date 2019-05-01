@@ -14,7 +14,7 @@ import scala.io.StdIn
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.server.Directives._
-import com.nachinius.croesus.WordCounter.FileRoute
+import com.nachinius.croesus.WordCounter.WordCounterRoute
 import scala.collection.concurrent.TrieMap
 import scala.collection.immutable.HashMap
 
@@ -26,7 +26,7 @@ object WebServer {
     // needed for the future flatMap/onComplete in the end
     implicit val executionContext = system.dispatcher
 
-    val bindingFuture = Http().bindAndHandle(FileRoute.route, "localhost", 8080)
+    val bindingFuture = Http().bindAndHandle(WordCounterRoute.route, "localhost", 8080)
 
     println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return

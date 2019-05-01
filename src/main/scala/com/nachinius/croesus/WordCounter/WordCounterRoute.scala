@@ -1,10 +1,15 @@
 package com.nachinius.croesus.WordCounter
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
-import akka.http.scaladsl.server.Directives.{complete, extractRequestContext, fileUpload, onSuccess}
+import akka.http.scaladsl.server.Directives.{
+  complete,
+  extractRequestContext,
+  fileUpload,
+  onSuccess
+}
 import akka.stream.scaladsl.Framing
 import akka.util.ByteString
 
-object FileRoute {
+object WordCounterRoute {
 
   type Dict = Map[String, Int]
   val splitWords = Framing.delimiter(ByteString(" "), 256)
@@ -28,7 +33,7 @@ object FileRoute {
               }
 
           onSuccess(acc) { dict =>
-            val sol = Solution(sumUp(dict), dict)
+            val sol = Solution(Solution.sumUp(dict), dict)
             val jsValue = JsonSupport.SolutionJsonFormat.write(sol)
             complete(
               HttpEntity(ContentTypes.`application/json`, jsValue.prettyPrint)
@@ -37,14 +42,7 @@ object FileRoute {
       }
     }
 
-  def sumUp(dict: Map[String, Int]): Int = {
-    dict.aggregate(0)((prevCount, nextKV) => prevCount + nextKV._2, _ + _)
-  }
-
-  final case class Solution(totalWordCount: Int,
-                            dictionaryCount: Map[String, Int]) {
-    def countOf(word: String) = dictionaryCount.getOrElse(word, 0)
-  }
+  
 
   import spray.json._
 
