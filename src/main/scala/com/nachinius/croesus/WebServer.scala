@@ -15,14 +15,34 @@ object WebServer {
         // needed for the future flatMap/onComplete in the end
         implicit val executionContext = system.dispatcher
         
-        val route =
+        val helloRoute =
             path("hello") {
                 get {
                     complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Say hello to akka-http</h1>"))
                 }
             }
+    
+        // adding integers as a service
+        val route =
+            extractRequestContext { ctx =>
+                implicit val materializer = ctx.materializer
+            
+                fileUpload("csv") {
+                    case (metadata, byteSource) =>
+                    
+                        val sumF: Future[Int] =
+                        // sum the numbers as they arrive so that we can
+                        // accept any size of file
+                            byteSource.via(Framing.delimiter(ByteString("\n"), 1024))
+                                .mapConcat(_.utf8String.split(",").toVector)
+                                .map(_.toInt)
+                                .runFold(0) { (acc, n) => acc + n }
+                    
+                        onSuccess(sumF) { sum => complete(s"Sum: $sum") }
+                }
+            }
         
-        val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
+        val bindingFuture = Http().bindAndHandle(helloRoute, "localhost", 8080)
         
         println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
         StdIn.readLine() // let it run until user presses return
@@ -31,3 +51,4 @@ object WebServer {
             .onComplete(_ => system.terminate()) // and shutdown when done
     }
 }
+
