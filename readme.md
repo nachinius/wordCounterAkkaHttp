@@ -14,6 +14,6 @@ The following file will fail
 
     curl -F "file=@~/src/test/resources/hugeFile.txt" localhost:8080/
 
-Whereas the following will not
+Whereas the following will work ok
 
     curl -F "file=@~/src/test/resources/bigFile.txt" localhost:8080/
