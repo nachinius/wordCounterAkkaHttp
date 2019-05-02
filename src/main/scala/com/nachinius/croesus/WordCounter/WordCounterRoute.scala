@@ -13,7 +13,7 @@ object WordCounterRoute {
   
   val mainSeparator = " "
   val extraSeparatorRegex= "[,\t\n.]"
-  val maxWordSize = 1024
+  val maxWordSize = 10000000
   val fieldName = "file"
 
   val splitWords = Framing.delimiter(ByteString(" "), 256)
